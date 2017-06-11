@@ -1,0 +1,91 @@
+//YWROBOT
+//Compatible with the Arduino IDE 1.0
+//Library version:1.1
+// Version pour Arduino Uno + LCD via I2C
+// Connections: I2C: Gnd = Noir sur Gnd, VCC = Jaune = 5v, SDA = Vert = SDA, SCL = Bleu = SCL
+// Connections: Dist: VCC = bleu/blc = 5V, Trig = Bleu = 10, Echo = Orange/blc = 09, Gnd = Orange = gnd
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
+
+//distance1 sensor
+#define echoPin 2 // broche Echo 
+#define trigPin 0 // broche Trigger (declenchement)
+
+LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
+
+int maximumRange = 400; // distance1 Maximale acceptée (en cm)
+int minimumRange = 0;   // distance1 Minimale acceptée (en cm)
+int Haut1 = 165;   // Hauteur du capteur
+long pi = 3.141516;
+long r = 35;
+long l = 115;
+
+long duration1, distance1, duration2, distance2; // Durée utilisé pour calculer la distance1
+long h1, h2, h3;
+long vol1, vol2;
+
+void setup()
+{
+  // Activer la communication série
+  Serial.begin (9600);
+  // Activer les broches
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  lcd.init();                      // initialize the lcd 
+  lcd.init();
+  // Print a message to the LCD.
+  lcd.backlight();
+  lcd.setCursor(3,0);
+  lcd.print("Hello");
+  lcd.setCursor(2,1);
+  lcd.print("www.One2Care.be");
+}
+
+
+void loop()
+{
+  // Sonde 1
+  // Envoi une impulsion de 10 micro seconde sur la broche "trigger" 
+  digitalWrite(trigPin, LOW); 
+  delayMicroseconds(2); 
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10); 
+ 
+  digitalWrite(trigPin, LOW);
+  
+  // Attend que la broche Echo passe au niveau HAUT 
+  // retourne la durée
+  duration1 = pulseIn(echoPin, HIGH);
+  //Serial.println("duration1");
+  //Serial.println(duration1);
+  //Calculer la distance1 (en cm, basÃ© sur la vitesse du son).
+  distance1 = duration1/58.2; 
+  if (distance1 >= maximumRange || distance1 <= minimumRange)
+    {
+    /* Envoyer une valeur nÃ©gative sur la liaison sÃ©rie.
+       Activer la LED pour indiquer que l'erreur */    
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("STEP AWAY!!!");
+    }
+  else 
+    {
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("Dist:");
+      lcd.print(distance1);
+      lcd.setCursor(0,1);
+      lcd.print("Cuve:");
+      h1 = (Haut1 - distance1);
+      lcd.print(h1);
+      lcd.print("cm");
+      vol1 = h1 * 3,14 * 1000;
+      lcd.print(" ");
+      lcd.print(vol1);
+      lcd.print("L");
+    }
+    
+ //Attendre 50ms avant d'effectuer la lecture suivante.
+ delay(500);
+  
+}
